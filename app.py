@@ -283,7 +283,7 @@ try:
     audio = mic_recorder(
         start_prompt="🎙️ START Recording",
         stop_prompt="⏹️ STOP Recording",
-        just_once=False,
+        just_once=True,
         use_container_width=True,
         key="voice_recorder"
     )

@@ -101,6 +101,18 @@ st.markdown("""
             border-radius: 20px !important;
             border: 2px solid #4a90e2 !important;
         }
+        /* ── Fix mic recorder button ── */
+.stCustomComponentV1 {
+    border-radius: 12px !important;
+    border: 2px solid #4a90e2 !important;
+    min-height: 50px !important;
+}
+
+iframe {
+    border-radius: 12px !important;
+    min-height: 55px !important;
+    width: 100% !important;
+}
         [data-testid="stSidebar"] { background-color: #1e1e2f; }
         [data-testid="stSidebar"] * { color: white !important; }
         [data-testid="stSidebar"] input { color: black !important; background-color: white !important; }
@@ -274,7 +286,7 @@ if "quick_prompt" in st.session_state:
 # ── VOICE INPUT SECTION ───────────────────────────────────────────────
 st.markdown("---")
 st.markdown("### 🎙️ Voice Input")
-st.caption("Click START → speak → click STOP → AI replies!")
+st.info("👇 Click the blue bar below → Speak → Click again to Stop!")
 
 try:
     from streamlit_mic_recorder import mic_recorder

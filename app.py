@@ -271,69 +271,91 @@ if "quick_prompt" in st.session_state:
 
 
 # ── VOICE INPUT ───────────────────────────────────────────────────────
+# ── VOICE INPUT SECTION ───────────────────────────────────────────────
 st.markdown("---")
 st.markdown("### 🎙️ Voice Input")
-st.caption("Click record → speak → AI replies!")
+st.caption("Click START → speak → click STOP → AI replies!")
 
-from streamlit_mic_recorder import mic_recorder
+try:
+    from streamlit_mic_recorder import mic_recorder
 
-audio = mic_recorder(
-    start_prompt="🎙️ Click to Speak",
-    stop_prompt="⏹️ Click to Stop",
-    just_once=True,
-    key="voice_input"
-)
+    # Browser based mic recorder
+    audio = mic_recorder(
+        start_prompt="🎙️ START Recording",
+        stop_prompt="⏹️ STOP Recording",
+        just_once=False,
+        use_container_width=True,
+        key="voice_recorder"
+    )
 
-if audio:
-    import tempfile, os
-    from assistant import client
-    from voice_helper import text_to_speech
+    if audio and audio.get('bytes'):
+        import tempfile, os
+        from assistant import client
+        from voice_helper import text_to_speech
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
-        tmp.write(audio['bytes'])
-        tmp_path = tmp.name
+        # Show audio playback so user can verify
+        st.audio(audio['bytes'], format='audio/wav')
 
-    with st.spinner("🧠 Transcribing your voice..."):
-        try:
-            with open(tmp_path, 'rb') as f:
-                transcription = client.audio.transcriptions.create(
-                    model="whisper-large-v3",
-                    file=f,
-                    language="en"
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(
+            delete=False, suffix='.wav'
+        ) as tmp:
+            tmp.write(audio['bytes'])
+            tmp_path = tmp.name
+
+        # Transcribe with Groq Whisper
+        with st.spinner("🧠 Transcribing..."):
+            try:
+                with open(tmp_path, 'rb') as f:
+                    transcription = client.audio.transcriptions.create(
+                        model="whisper-large-v3",
+                        file=f,
+                        language="en"
+                    )
+                spoken_text = transcription.text.strip()
+            except Exception as e:
+                spoken_text = None
+                st.error(f"Transcription error: {e}")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        if spoken_text and spoken_text != ".":
+            st.success(f"✅ You said: '{spoken_text}'")
+
+            # Add to chat
+            st.session_state.messages.append({
+                "role": "user",
+                "content": f"🎙️ {spoken_text}"
+            })
+            show_message("user", f"🎙️ {spoken_text}")
+
+            # Get AI response
+            with st.spinner("🧠 Thinking..."):
+                reply = get_response(
+                    spoken_text,
+                    st.session_state.get("personality", "😊 Friend")
                 )
-            spoken_text = transcription.text.strip()
-        except Exception as e:
-            spoken_text = None
-            st.error(f"Transcription error: {e}")
-        finally:
-            os.unlink(tmp_path)
 
-    if spoken_text:
-        st.success(f"✅ You said: '{spoken_text}'")
+            # Show response
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": reply
+            })
+            show_message("bot", reply)
 
-        st.session_state.messages.append({
-            "role": "user",
-            "content": f"🎙️ {spoken_text}"
-        })
-        show_message("user", f"🎙️ {spoken_text}")
+            # Speak response
+            st.markdown("#### 🔊 AI Voice Response")
+            text_to_speech(reply)
 
-        with st.spinner("🧠 Thinking..."):
-            reply = get_response(
-                spoken_text,
-                st.session_state.personality
-            )
+            st.session_state.total_messages += 2
+        else:
+            st.warning("⚠️ Couldn't understand. Speak clearly and try again!")
 
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": reply
-        })
-        show_message("bot", reply)
-        text_to_speech(reply)
-        st.session_state.total_messages += 2
-        st.rerun()
-    else:
-        st.warning("⚠️ Couldn't understand. Try speaking clearly!")
-
+except ImportError:
+    st.error("⚠️ Voice module not installed. Run: pip install streamlit-mic-recorder")
+except Exception as e:
+    st.error(f"Voice error: {str(e)}")
 
 # ── TEXT CHAT INPUT ───────────────────────────────────────────────────
 user_input = st.chat_input(f"Message {assistant_name}...")

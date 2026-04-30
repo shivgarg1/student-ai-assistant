@@ -1,0 +1,6 @@
+.streamlit/secrets.toml
+user_memory.json
+__pycache__/
+*.pyc
+.venv/
+response_audio.mp3

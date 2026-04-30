@@ -1,0 +1,7 @@
+streamlit
+groq
+gtts
+sounddevice
+scipy
+scikit-learn
+streamlit-mic-recorder

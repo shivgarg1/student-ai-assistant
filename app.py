@@ -259,6 +259,48 @@ st.markdown("""
         }
         .stat-number { font-size: 16px !important; }
     }
+    /* ── Fix expander overlap ── */
+    .streamlit-expanderHeader {
+        background: #13131a !important;
+        border: 1px solid #2a2a3a !important;
+        border-radius: 12px !important;
+        color: #e0e0e0 !important;
+        font-size: 14px !important;
+        padding: 12px 16px !important;
+        margin: 4px 0 !important;
+    }
+    .streamlit-expanderContent {
+        background: #13131a !important;
+        border: 1px solid #2a2a3a !important;
+        border-top: none !important;
+        border-radius: 0 0 12px 12px !important;
+        padding: 16px !important;
+    }
+
+    /* ── Push content above input bar ── */
+    .block-container {
+        padding-bottom: 140px !important;
+        max-width: 760px !important;
+    }
+
+    /* ── Fix input bar position ── */
+    .stChatInput {
+        position: fixed !important;
+        bottom: 16px !important;
+        left: 50% !important;
+        transform: translateX(-30%) !important;
+        width: 55% !important;
+        z-index: 999 !important;
+    }
+
+    /* ── Fix mic button position ── */
+    [data-testid="column"]:first-child .stButton {
+        position: fixed !important;
+        bottom: 16px !important;
+        left: calc(50% - 220px) !important;
+        z-index: 1000 !important;
+        width: 56px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 

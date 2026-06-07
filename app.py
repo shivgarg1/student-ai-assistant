@@ -10,35 +10,22 @@ st.set_page_config(
     layout="centered",
 )
 
-# ── PWA + MOBILE META ─────────────────────────────────────────────────
-st.markdown("""
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-title" content="Aria AI">
-        <meta name="theme-color" content="#7b2ff7">
-    </head>
-""", unsafe_allow_html=True)
-
 # ── CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
-
     * { font-family: 'Space Grotesk', sans-serif !important; }
 
-    /* ── Hide streamlit default stuff ── */
     #MainMenu, footer, header { visibility: hidden; }
+
     .block-container {
         padding-top: 1rem !important;
-        padding-bottom: 120px !important;
+        padding-bottom: 100px !important;
+        max-width: 760px !important;
     }
 
-    /* ── Background ── */
     .stApp { background: #0a0a0f; }
 
-    /* ── Header banner ── */
     .header-box {
         background: linear-gradient(135deg, #7b2ff7 0%, #f107a3 100%);
         border-radius: 24px;
@@ -46,34 +33,10 @@ st.markdown("""
         text-align: center;
         color: white;
         margin-bottom: 16px;
-        position: relative;
-        overflow: hidden;
     }
-    .header-box::before {
-        content: '';
-        position: absolute;
-        top: -50%; left: -50%;
-        width: 200%; height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-        animation: shimmer 3s infinite;
-    }
-    @keyframes shimmer {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    .header-box h2 {
-        font-size: 24px;
-        font-weight: 700;
-        margin: 0;
-        letter-spacing: -0.5px;
-    }
-    .header-box p {
-        font-size: 12px;
-        opacity: 0.8;
-        margin: 4px 0 0;
-    }
+    .header-box h2 { font-size: 24px; font-weight: 700; margin: 0; }
+    .header-box p  { font-size: 12px; opacity: 0.8; margin: 4px 0 0; }
 
-    /* ── Stats bar ── */
     .stats-bar {
         display: flex;
         justify-content: space-around;
@@ -93,7 +56,6 @@ st.markdown("""
     }
     .stat-label { font-size: 10px; color: #666; margin-top: 2px; }
 
-    /* ── Chat bubbles ── */
     .chat-row {
         display: flex;
         align-items: flex-end;
@@ -141,7 +103,6 @@ st.markdown("""
     .bot-avatar  { background: linear-gradient(135deg, #7b2ff7, #f107a3); }
     .user-avatar { background: #2a2a3a; }
 
-    /* ── Loading dots ── */
     .loading-dots {
         display: flex;
         gap: 5px;
@@ -164,32 +125,18 @@ st.markdown("""
         40%            { transform: scale(1.2); opacity: 1; }
     }
 
-    /* ── Fixed bottom input bar ── */
-    .fixed-bottom {
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        background: #0a0a0f;
-        border-top: 1px solid #2a2a3a;
-        padding: 12px 16px;
-        z-index: 999;
-        backdrop-filter: blur(10px);
-    }
-
-    /* ── Chat input styling ── */
     .stChatInput input {
         background: #13131a !important;
         border: 1px solid #2a2a3a !important;
         border-radius: 16px !important;
         color: white !important;
         font-size: 15px !important;
-        padding: 12px 16px !important;
     }
     .stChatInput input:focus {
         border-color: #7b2ff7 !important;
         box-shadow: 0 0 0 2px rgba(123,47,247,0.2) !important;
     }
 
-    /* ── Mic button ── */
     .stButton button {
         background: linear-gradient(135deg, #7b2ff7, #f107a3) !important;
         color: white !important;
@@ -197,14 +144,8 @@ st.markdown("""
         border-radius: 16px !important;
         font-size: 18px !important;
         height: 50px !important;
-        transition: transform 0.2s ease !important;
-    }
-    .stButton button:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 4px 20px rgba(123,47,247,0.4) !important;
     }
 
-    /* ── Sidebar ── */
     [data-testid="stSidebar"] {
         background: #0d0d14 !important;
         border-right: 1px solid #2a2a3a !important;
@@ -216,28 +157,6 @@ st.markdown("""
         color: white !important;
         border-radius: 10px !important;
     }
-    [data-testid="stSidebar"] .stSelectbox > div {
-        background: #13131a !important;
-        border: 1px solid #2a2a3a !important;
-        border-radius: 10px !important;
-    }
-
-    /* ── Radio buttons ── */
-    [data-testid="stSidebar"] .stRadio label {
-        background: #13131a;
-        border: 1px solid #2a2a3a;
-        border-radius: 10px;
-        padding: 8px 12px;
-        margin: 3px 0;
-        display: block;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    [data-testid="stSidebar"] .stRadio label:hover {
-        border-color: #7b2ff7 !important;
-    }
-
-    /* ── Sidebar buttons ── */
     [data-testid="stSidebar"] .stButton button {
         background: #13131a !important;
         border: 1px solid #2a2a3a !important;
@@ -246,88 +165,22 @@ st.markdown("""
         height: auto !important;
         padding: 8px !important;
     }
-    [data-testid="stSidebar"] .stButton button:hover {
-        border-color: #7b2ff7 !important;
-    }
 
-    /* ── Mobile responsive ── */
     @media (max-width: 768px) {
         .header-box h2 { font-size: 18px !important; }
-        .user-bubble, .bot-bubble {
-            max-width: 92% !important;
-            font-size: 14px !important;
-        }
+        .user-bubble, .bot-bubble { max-width: 92% !important; font-size: 14px !important; }
         .stat-number { font-size: 16px !important; }
     }
-    
-
-    /* ── Push content above input bar ── */
-    .block-container {
-        padding-bottom: 140px !important;
-        max-width: 760px !important;
-    }
-    # ── TOOLS TABS ────────────────────────────────────────────────────────
-st.markdown("---")
-tab1, tab2 = st.tabs(["📅 Study Plan", "🧠 Quiz"])
-
-with tab1:
-    col1, col2 = st.columns(2)
-    with col1:
-        subject = st.text_input("📚 subject", placeholder="e.g. Physics, DSA")
-        level   = st.selectbox("📊 level", ["Beginner", "Intermediate", "Advanced"])
-    with col2:
-        days  = st.slider("📆 days", 3, 30, 7)
-        hours = st.slider("⏰ hrs/day", 1, 8, 2)
-    goal = st.text_input("🎯 goal", placeholder="e.g. pass exam, get internship")
-
-    if st.button("🧠 generate plan", use_container_width=True):
-        if subject:
-            with st.spinner("cooking ur plan... 👨‍🍳"):
-                plan = get_response(
-                    f"Create a {days}-day study plan for {subject} at {level} level, {hours} hrs/day. Goal: {goal or 'master it'}. Format day by day.",
-                    st.session_state.personality
-                )
-            st.markdown(plan)
-            st.download_button("💾 save", plan, f"plan_{subject}.txt")
-        else:
-            st.warning("enter a subject first 💀")
-
-with tab2:
-    col1, col2 = st.columns(2)
-    with col1:
-        quiz_sub   = st.text_input("📚 topic", placeholder="e.g. Python, History")
-        quiz_level = st.selectbox("📊 difficulty", ["Easy", "Medium", "Hard"], key="qlvl")
-    with col2:
-        num_q     = st.slider("❓ questions", 3, 10, 5)
-        quiz_type = st.selectbox("📝 type", ["Multiple Choice", "True/False", "Mixed"])
-
-    if st.button("🎯 generate quiz", use_container_width=True):
-        if quiz_sub:
-            with st.spinner("making ur quiz... 📝"):
-                quiz = get_response(
-                    f"Create a {quiz_level} {quiz_type} quiz about {quiz_sub} with {num_q} questions. Show question, options A-D, ✅ answer, explanation.",
-                    st.session_state.personality
-                )
-            st.markdown(quiz)
-            st.download_button("💾 save", quiz, f"quiz_{quiz_sub}.txt")
-            st.session_state.topics_asked += 1
-        else:
-            st.warning("enter a topic first 💀")
 </style>
 """, unsafe_allow_html=True)
 
 
 # ── SESSION STATE ─────────────────────────────────────────────────────
-if "messages"       not in st.session_state:
-    st.session_state.messages       = []
-if "total_messages" not in st.session_state:
-    st.session_state.total_messages = 0
-if "mood"           not in st.session_state:
-    st.session_state.mood           = "😊 Happy"
-if "topics_asked"   not in st.session_state:
-    st.session_state.topics_asked   = 0
-if "personality"    not in st.session_state:
-    st.session_state.personality    = "😊 Friend"
+if "messages"       not in st.session_state: st.session_state.messages       = []
+if "total_messages" not in st.session_state: st.session_state.total_messages = 0
+if "mood"           not in st.session_state: st.session_state.mood           = "😊 Happy"
+if "topics_asked"   not in st.session_state: st.session_state.topics_asked   = 0
+if "personality"    not in st.session_state: st.session_state.personality    = "😊 Friend"
 
 
 # ── SIDEBAR ───────────────────────────────────────────────────────────
@@ -369,13 +222,13 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### ⚡ Quick")
-    if st.button("📚 study help", use_container_width=True):
+    if st.button("📚 study help",  use_container_width=True):
         st.session_state["quick_prompt"] = "Help me make a study plan"
     if st.button("💪 motivate me", use_container_width=True):
         st.session_state["quick_prompt"] = "I need some motivation rn"
     if st.button("😟 im stressed", use_container_width=True):
         st.session_state["quick_prompt"] = "im really stressed about exams"
-    if st.button("🧠 quiz me", use_container_width=True):
+    if st.button("🧠 quiz me",     use_container_width=True):
         st.session_state["quick_prompt"] = "Give me a quick quiz on something I study"
 
     st.markdown("---")
@@ -466,54 +319,54 @@ if "quick_prompt" in st.session_state:
     show_message("bot", reply)
     st.rerun()
 
-# ── STUDY PLAN ────────────────────────────────────────────────────────
+# ── TOOLS TABS ────────────────────────────────────────────────────────
 st.markdown("---")
-with st.expander("📅 study plan generator", expanded=False):
+tab1, tab2 = st.tabs(["📅 Study Plan", "🧠 Quiz"])
+
+with tab1:
     col1, col2 = st.columns(2)
     with col1:
-        subject  = st.text_input("📚 subject", placeholder="e.g. Physics, DSA")
-        level    = st.selectbox("📊 level", ["Beginner", "Intermediate", "Advanced"])
+        subject = st.text_input("📚 subject", placeholder="e.g. Physics, DSA")
+        level   = st.selectbox("📊 level", ["Beginner", "Intermediate", "Advanced"])
     with col2:
-        days     = st.slider("📆 days", 3, 30, 7)
-        hours    = st.slider("⏰ hrs/day", 1, 8, 2)
+        days  = st.slider("📆 days", 3, 30, 7)
+        hours = st.slider("⏰ hrs/day", 1, 8, 2)
     goal = st.text_input("🎯 goal", placeholder="e.g. pass exam, get internship")
 
-    if st.button("🧠 generate plan"):
+    if st.button("🧠 generate plan", use_container_width=True):
         if subject:
-            with st.spinner("cooking ur study plan... 👨‍🍳"):
+            with st.spinner("cooking ur plan... 👨‍🍳"):
                 plan = get_response(
-                    f"Create a {days}-day study plan for {subject} at {level} level, {hours} hours/day. Goal: {goal or 'master the subject'}. Format day by day with topics, resources and practice.",
+                    f"Create a {days}-day study plan for {subject} at {level} level, {hours} hrs/day. Goal: {goal or 'master it'}. Format day by day.",
                     st.session_state.personality
                 )
             st.markdown(plan)
-            st.download_button("💾 save plan", plan, f"plan_{subject}.txt")
+            st.download_button("💾 save", plan, f"plan_{subject}.txt")
         else:
-            st.warning("bro enter a subject first 💀")
+            st.warning("enter a subject first 💀")
 
-# ── QUIZ ──────────────────────────────────────────────────────────────
-with st.expander("🧠 quiz generator", expanded=False):
+with tab2:
     col1, col2 = st.columns(2)
     with col1:
         quiz_sub   = st.text_input("📚 topic", placeholder="e.g. Python, History")
         quiz_level = st.selectbox("📊 difficulty", ["Easy", "Medium", "Hard"], key="qlvl")
     with col2:
-        num_q    = st.slider("❓ questions", 3, 10, 5)
+        num_q     = st.slider("❓ questions", 3, 10, 5)
         quiz_type = st.selectbox("📝 type", ["Multiple Choice", "True/False", "Mixed"])
 
-    if st.button("🎯 generate quiz"):
+    if st.button("🎯 generate quiz", use_container_width=True):
         if quiz_sub:
             with st.spinner("making ur quiz... 📝"):
                 quiz = get_response(
-                    f"Create a {quiz_level} {quiz_type} quiz about {quiz_sub} with {num_q} questions. For each: show question, options (A-D), correct answer with ✅, and brief explanation.",
+                    f"Create a {quiz_level} {quiz_type} quiz about {quiz_sub} with {num_q} questions. Show question, options A-D, ✅ answer, explanation.",
                     st.session_state.personality
                 )
             st.markdown(quiz)
-            st.download_button("💾 save quiz", quiz, f"quiz_{quiz_sub}.txt")
+            st.download_button("💾 save", quiz, f"quiz_{quiz_sub}.txt")
             st.session_state.topics_asked += 1
         else:
-            st.warning("enter a topic first bestie 💀")
+            st.warning("enter a topic first 💀")
 
-# ── BOTTOM INPUT BAR ──────────────────────────────────────────────────
 # ── BOTTOM INPUT ──────────────────────────────────────────────────────
 st.markdown("---")
 col_mic, col_chat = st.columns([1, 9])
@@ -523,12 +376,12 @@ with col_mic:
 
 with col_chat:
     user_input = st.chat_input(f"message {assistant_name}...")
+
 # ── MIC HANDLER ───────────────────────────────────────────────────────
 if mic_btn:
     from voice_helper import text_to_speech
     from assistant import client
     import sounddevice as sd
-    import numpy as np
     from scipy.io.wavfile import write
     import tempfile, os
 

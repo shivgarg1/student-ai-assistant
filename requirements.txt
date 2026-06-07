@@ -2,7 +2,5 @@ streamlit
 groq
 gtts
 scikit-learn
-scipy
-sounddevice
 numpy
 requests

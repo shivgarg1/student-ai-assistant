@@ -377,65 +377,82 @@ with col_mic:
 with col_chat:
     user_input = st.chat_input(f"message {assistant_name}...")
 
+# ── BOTTOM INPUT ──────────────────────────────────────────────────────
+st.markdown("---")
+col_mic, col_chat = st.columns([1, 9])
+
+# Detect if running on Streamlit Cloud
+import os
+is_cloud = os.environ.get("HOME") == "/home/adminuser"
+
+with col_mic:
+    mic_btn = st.button("🎙️", use_container_width=True)
+
+with col_chat:
+    user_input = st.chat_input(f"message {assistant_name}...")
+
 # ── MIC HANDLER ───────────────────────────────────────────────────────
 if mic_btn:
-    from voice_helper import text_to_speech
-    from assistant import client
-    import sounddevice as sd
-    from scipy.io.wavfile import write
-    import tempfile, os
-
-    SAMPLE_RATE = 16000
-    DURATION    = 6
-
-    rec_holder = st.empty()
-    rec_holder.info("🔴 listening... speak now!")
-
-    audio_data = sd.rec(
-        int(DURATION * SAMPLE_RATE),
-        samplerate=SAMPLE_RATE,
-        channels=1,
-        dtype='int16',
-        device=2
-    )
-    sd.wait()
-    rec_holder.empty()
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
-        write(tmp.name, SAMPLE_RATE, audio_data)
-        tmp_path = tmp.name
-
-    with st.spinner("transcribing... 🧠"):
-        try:
-            with open(tmp_path, 'rb') as f:
-                transcription = client.audio.transcriptions.create(
-                    model="whisper-large-v3",
-                    file=f,
-                    language="en"
-                )
-            spoken_text = transcription.text.strip()
-        except Exception as e:
-            spoken_text = None
-            st.error(f"error: {e}")
-        finally:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
-
-    if spoken_text and spoken_text != ".":
-        st.success(f"u said: '{spoken_text}'")
-        st.session_state.messages.append({"role": "user", "content": f"🎙️ {spoken_text}"})
-        show_message("user", f"🎙️ {spoken_text}")
-
-        with st.spinner("thinking... 💭"):
-            reply = get_response(spoken_text, st.session_state.personality)
-
-        st.session_state.messages.append({"role": "assistant", "content": reply})
-        show_message("bot", reply)
-        text_to_speech(reply)
-        st.session_state.total_messages += 2
-        st.rerun()
+    if is_cloud:
+        st.warning("🎙️ Voice only works locally on your Mac! On the web app, just type your message 😊")
     else:
-        st.warning("couldn't hear u bestie, try again 💀")
+        from voice_helper import text_to_speech
+        from assistant import client
+        import sounddevice as sd
+        from scipy.io.wavfile import write
+        import tempfile, os
+
+        SAMPLE_RATE = 16000
+        DURATION    = 6
+
+        rec_holder = st.empty()
+        rec_holder.info("🔴 listening... speak now!")
+
+        audio_data = sd.rec(
+            int(DURATION * SAMPLE_RATE),
+            samplerate=SAMPLE_RATE,
+            channels=1,
+            dtype='int16',
+            device=2
+        )
+        sd.wait()
+        rec_holder.empty()
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
+            write(tmp.name, SAMPLE_RATE, audio_data)
+            tmp_path = tmp.name
+
+        with st.spinner("transcribing... 🧠"):
+            try:
+                with open(tmp_path, 'rb') as f:
+                    transcription = client.audio.transcriptions.create(
+                        model="whisper-large-v3",
+                        file=f,
+                        language="en"
+                    )
+                spoken_text = transcription.text.strip()
+            except Exception as e:
+                spoken_text = None
+                st.error(f"error: {e}")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+
+        if spoken_text and spoken_text != ".":
+            st.success(f"u said: '{spoken_text}'")
+            st.session_state.messages.append({"role": "user", "content": f"🎙️ {spoken_text}"})
+            show_message("user", f"🎙️ {spoken_text}")
+
+            with st.spinner("thinking... 💭"):
+                reply = get_response(spoken_text, st.session_state.personality)
+
+            st.session_state.messages.append({"role": "assistant", "content": reply})
+            show_message("bot", reply)
+            text_to_speech(reply)
+            st.session_state.total_messages += 2
+            st.rerun()
+        else:
+            st.warning("couldn't hear u bestie, try again 💀")
 
 # ── TEXT INPUT HANDLER ────────────────────────────────────────────────
 if user_input:

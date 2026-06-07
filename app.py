@@ -432,7 +432,6 @@ if user_input:
     show_message("bot", reply)
     st.rerun()
 # ── TEXT CHAT INPUT ───────────────────────────────────────────────────
-user_input = st.chat_input(f"Message {assistant_name}...")
 
 if user_input:
     # Detect mood

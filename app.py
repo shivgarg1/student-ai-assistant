@@ -282,93 +282,156 @@ if "quick_prompt" in st.session_state:
     st.rerun()
 
 
-# ── VOICE INPUT ───────────────────────────────────────────────────────
-# ── VOICE INPUT SECTION ───────────────────────────────────────────────
+# ── CHAT INPUT + VOICE BUTTON ─────────────────────────────────────────
 st.markdown("---")
-st.markdown("### 🎙️ Voice Input")
-st.info("👇 Click the blue bar below → Speak → Click again to Stop!")
 
-try:
-    from streamlit_mic_recorder import mic_recorder
+# Two columns — mic button + text input side by side
+col_mic, col_chat = st.columns([1, 8])
 
-    # Browser based mic recorder
-    audio = mic_recorder(
-        start_prompt="🎙️ START Recording",
-        stop_prompt="⏹️ STOP Recording",
-        just_once=True,
-        use_container_width=True,
-        key="voice_recorder"
+with col_mic:
+    mic_btn = st.button("🎙️", help="Click to speak", use_container_width=True)
+
+with col_chat:
+    user_input = st.chat_input(f"Message {assistant_name}...")
+
+# ── HANDLE MIC BUTTON ─────────────────────────────────────────────────
+if mic_btn:
+    from voice_helper import text_to_speech
+    from assistant import client
+    import sounddevice as sd
+    import numpy as np
+    from scipy.io.wavfile import write
+    import tempfile, os, time
+
+    SAMPLE_RATE = 16000
+    DURATION    = 6
+
+    # Show recording indicator
+    recording_placeholder = st.empty()
+    recording_placeholder.info("🔴 Recording for 6 seconds... Speak now!")
+
+    # Record audio
+    audio_data = sd.rec(
+        int(DURATION * SAMPLE_RATE),
+        samplerate=SAMPLE_RATE,
+        channels=1,
+        dtype='int16',
+        device=2  # MacBook Pro mic
     )
+    sd.wait()
+    recording_placeholder.empty()
 
-    if audio and audio.get('bytes'):
-        import tempfile, os
-        from assistant import client
-        from voice_helper import text_to_speech
+    # Save to temp file
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix='.wav'
+    ) as tmp:
+        write(tmp.name, SAMPLE_RATE, audio_data)
+        tmp_path = tmp.name
 
-        # Show audio playback so user can verify
-        st.audio(audio['bytes'], format='audio/wav')
-
-        # Save to temp file
-        with tempfile.NamedTemporaryFile(
-            delete=False, suffix='.wav'
-        ) as tmp:
-            tmp.write(audio['bytes'])
-            tmp_path = tmp.name
-
-        # Transcribe with Groq Whisper
-        with st.spinner("🧠 Transcribing..."):
-            try:
-                with open(tmp_path, 'rb') as f:
-                    transcription = client.audio.transcriptions.create(
-                        model="whisper-large-v3",
-                        file=f,
-                        language="en"
-                    )
-                spoken_text = transcription.text.strip()
-            except Exception as e:
-                spoken_text = None
-                st.error(f"Transcription error: {e}")
-            finally:
-                if os.path.exists(tmp_path):
-                    os.unlink(tmp_path)
-
-        if spoken_text and spoken_text != ".":
-            st.success(f"✅ You said: '{spoken_text}'")
-
-            # Add to chat
-            st.session_state.messages.append({
-                "role": "user",
-                "content": f"🎙️ {spoken_text}"
-            })
-            show_message("user", f"🎙️ {spoken_text}")
-
-            # Get AI response
-            with st.spinner("🧠 Thinking..."):
-                reply = get_response(
-                    spoken_text,
-                    st.session_state.get("personality", "😊 Friend")
+    # Transcribe with Whisper
+    with st.spinner("🧠 Transcribing..."):
+        try:
+            with open(tmp_path, 'rb') as f:
+                transcription = client.audio.transcriptions.create(
+                    model="whisper-large-v3",
+                    file=f,
+                    language="en"
                 )
+            spoken_text = transcription.text.strip()
+        except Exception as e:
+            spoken_text = None
+            st.error(f"Error: {e}")
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
 
-            # Show response
-            st.session_state.messages.append({
-                "role": "assistant",
-                "content": reply
-            })
-            show_message("bot", reply)
+    if spoken_text and spoken_text != ".":
+        st.success(f"🎙️ You said: '{spoken_text}'")
 
-            # Speak response
-            st.markdown("#### 🔊 AI Voice Response")
-            text_to_speech(reply)
+        # Add to chat
+        st.session_state.messages.append({
+            "role": "user",
+            "content": f"🎙️ {spoken_text}"
+        })
+        show_message("user", f"🎙️ {spoken_text}")
 
-            st.session_state.total_messages += 2
-        else:
-            st.warning("⚠️ Couldn't understand. Speak clearly and try again!")
+        # Get AI response
+        with st.spinner("🧠 Thinking..."):
+            reply = get_response(
+                spoken_text,
+                st.session_state.get("personality", "😊 Friend")
+            )
 
-except ImportError:
-    st.error("⚠️ Voice module not installed. Run: pip install streamlit-mic-recorder")
-except Exception as e:
-    st.error(f"Voice error: {str(e)}")
+        # Show response
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": reply
+        })
+        show_message("bot", reply)
 
+        # Speak back
+        text_to_speech(reply)
+        st.session_state.total_messages += 2
+        st.rerun()
+    else:
+        st.warning("⚠️ Couldn't hear you. Try again!")
+
+# ── HANDLE TEXT INPUT ─────────────────────────────────────────────────
+if user_input:
+    # Detect mood
+    mood_map = {
+        "stressed": "😟 Stressed", "sad": "😢 Sad",
+        "happy":    "😊 Happy",    "excited": "🤩 Excited",
+        "tired":    "😴 Tired",    "confused": "😕 Confused",
+    }
+    for keyword, mood in mood_map.items():
+        if keyword in user_input.lower():
+            st.session_state.mood = mood
+            break
+
+    # Count topics
+    study_keywords = ["explain", "what is", "how does", "teach", "help me", "study", "homework"]
+    if any(k in user_input.lower() for k in study_keywords):
+        st.session_state.topics_asked += 1
+
+    # Show user message
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    show_message("user", user_input)
+
+    # Loading dots
+    loading = st.empty()
+    loading.markdown("""
+        <div class="chat-row">
+            <div class="avatar bot-avatar">🤖</div>
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Build prompt
+    length_map = {
+        "Short & Simple": "Keep response under 3 sentences.",
+        "Medium":         "Keep response concise but complete.",
+        "Detailed":       "Give a thorough detailed response."
+    }
+    styled_input = f"{user_input}\n\n[{length_map[response_length]}]"
+
+    # Get response
+    try:
+        reply = get_response(styled_input, st.session_state.personality)
+    except Exception as e:
+        reply = f"⚠️ Error: {str(e)}"
+
+    time.sleep(0.5)
+    loading.empty()
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
+    st.session_state.total_messages += 2
+    show_message("bot", reply)
+    st.rerun()
 # ── TEXT CHAT INPUT ───────────────────────────────────────────────────
 user_input = st.chat_input(f"Message {assistant_name}...")
 

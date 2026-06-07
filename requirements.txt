@@ -2,7 +2,6 @@ streamlit
 groq
 gtts
 scikit-learn
-streamlit-mic-recorder
 scipy
 sounddevice
 numpy

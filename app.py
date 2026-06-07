@@ -292,7 +292,6 @@ with col_mic:
     mic_btn = st.button("🎙️", help="Click to speak", use_container_width=True)
 
 with col_chat:
-    user_input = st.chat_input(f"Message {assistant_name}...")
 
 # ── HANDLE MIC BUTTON ─────────────────────────────────────────────────
 if mic_btn:

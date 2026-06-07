@@ -259,48 +259,60 @@ st.markdown("""
         }
         .stat-number { font-size: 16px !important; }
     }
-    /* ── Fix expander overlap ── */
-    .streamlit-expanderHeader {
-        background: #13131a !important;
-        border: 1px solid #2a2a3a !important;
-        border-radius: 12px !important;
-        color: #e0e0e0 !important;
-        font-size: 14px !important;
-        padding: 12px 16px !important;
-        margin: 4px 0 !important;
-    }
-    .streamlit-expanderContent {
-        background: #13131a !important;
-        border: 1px solid #2a2a3a !important;
-        border-top: none !important;
-        border-radius: 0 0 12px 12px !important;
-        padding: 16px !important;
-    }
+    
 
     /* ── Push content above input bar ── */
     .block-container {
         padding-bottom: 140px !important;
         max-width: 760px !important;
     }
+    # ── TOOLS TABS ────────────────────────────────────────────────────────
+st.markdown("---")
+tab1, tab2 = st.tabs(["📅 Study Plan", "🧠 Quiz"])
 
-    /* ── Fix input bar position ── */
-    .stChatInput {
-        position: fixed !important;
-        bottom: 16px !important;
-        left: 50% !important;
-        transform: translateX(-30%) !important;
-        width: 55% !important;
-        z-index: 999 !important;
-    }
+with tab1:
+    col1, col2 = st.columns(2)
+    with col1:
+        subject = st.text_input("📚 subject", placeholder="e.g. Physics, DSA")
+        level   = st.selectbox("📊 level", ["Beginner", "Intermediate", "Advanced"])
+    with col2:
+        days  = st.slider("📆 days", 3, 30, 7)
+        hours = st.slider("⏰ hrs/day", 1, 8, 2)
+    goal = st.text_input("🎯 goal", placeholder="e.g. pass exam, get internship")
 
-    /* ── Fix mic button position ── */
-    [data-testid="column"]:first-child .stButton {
-        position: fixed !important;
-        bottom: 16px !important;
-        left: calc(50% - 220px) !important;
-        z-index: 1000 !important;
-        width: 56px !important;
-    }
+    if st.button("🧠 generate plan", use_container_width=True):
+        if subject:
+            with st.spinner("cooking ur plan... 👨‍🍳"):
+                plan = get_response(
+                    f"Create a {days}-day study plan for {subject} at {level} level, {hours} hrs/day. Goal: {goal or 'master it'}. Format day by day.",
+                    st.session_state.personality
+                )
+            st.markdown(plan)
+            st.download_button("💾 save", plan, f"plan_{subject}.txt")
+        else:
+            st.warning("enter a subject first 💀")
+
+with tab2:
+    col1, col2 = st.columns(2)
+    with col1:
+        quiz_sub   = st.text_input("📚 topic", placeholder="e.g. Python, History")
+        quiz_level = st.selectbox("📊 difficulty", ["Easy", "Medium", "Hard"], key="qlvl")
+    with col2:
+        num_q     = st.slider("❓ questions", 3, 10, 5)
+        quiz_type = st.selectbox("📝 type", ["Multiple Choice", "True/False", "Mixed"])
+
+    if st.button("🎯 generate quiz", use_container_width=True):
+        if quiz_sub:
+            with st.spinner("making ur quiz... 📝"):
+                quiz = get_response(
+                    f"Create a {quiz_level} {quiz_type} quiz about {quiz_sub} with {num_q} questions. Show question, options A-D, ✅ answer, explanation.",
+                    st.session_state.personality
+                )
+            st.markdown(quiz)
+            st.download_button("💾 save", quiz, f"quiz_{quiz_sub}.txt")
+            st.session_state.topics_asked += 1
+        else:
+            st.warning("enter a topic first 💀")
 </style>
 """, unsafe_allow_html=True)
 
@@ -502,14 +514,15 @@ with st.expander("🧠 quiz generator", expanded=False):
             st.warning("enter a topic first bestie 💀")
 
 # ── BOTTOM INPUT BAR ──────────────────────────────────────────────────
-col_mic, col_chat = st.columns([1, 8])
+# ── BOTTOM INPUT ──────────────────────────────────────────────────────
+st.markdown("---")
+col_mic, col_chat = st.columns([1, 9])
 
 with col_mic:
-    mic_btn = st.button("🎙️", help="speak to Aria", use_container_width=True)
+    mic_btn = st.button("🎙️", use_container_width=True)
 
 with col_chat:
     user_input = st.chat_input(f"message {assistant_name}...")
-
 # ── MIC HANDLER ───────────────────────────────────────────────────────
 if mic_btn:
     from voice_helper import text_to_speech

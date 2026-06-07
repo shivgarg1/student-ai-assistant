@@ -290,9 +290,10 @@ col_mic, col_chat = st.columns([1, 8])
 
 with col_mic:
     mic_btn = st.button("🎙️", help="Click to speak", use_container_width=True)
+    with col_chat:
+        user_input = st.chat_input(f"Message {assistant_name}...")
 
-with col_chat:
-
+    if mic_btn:
 # ── HANDLE MIC BUTTON ─────────────────────────────────────────────────
 if mic_btn:
     from voice_helper import text_to_speech
